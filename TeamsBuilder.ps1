@@ -231,38 +231,42 @@ function diagTenantConfirm {
     collectTeamsTrunkID
 
     if ($script:lengthConfirmed = $true) {
+        write-host "`n"
         write-host "########## VOICE ROUTES ############"
+        write-host "`n"
 
         $voiceRoutes = Get-CsOnlineVoiceRoute | Select-Object Name, OnlinePstnGatewayList
         
         # Display the header with colors
-        Write-Host ("{0,-20} {1}" -f "Name", "OnlinePstnGatewayList") -ForegroundColor Red
-        
+        Write-Host ("{0,-20} {1}" -f "Name", "OnlinePstnGatewayList") -ForegroundColor Blue
+
         # Display each row with colors and check conditions
         $voiceRoutes | ForEach-Object {
             $voiceRouteName = $_.Name
             $gatewayList = $_.OnlinePstnGatewayList
-        
-            # Check if specific routes exist and their contents end with "*.msteams01.aspiresip.com"
+
+            # Check if specific routes exist and their contents matches $trunkFullID01 or $trunkFullID02
             if ($voiceRouteName -eq "UK-SUBINTERNATIONAL" -or $voiceRouteName -eq "UK-SUB-NATIONAL" -or $voiceRouteName -eq "UK Emergency") {
                 if ($gatewayList -contains $trunkFullID01 -or $gatewayList -contains $trunkFullID02) {
-                    Write-Host ("{0,-20} {1}" -f $name, $gatewayList) -ForegroundColor Green
+                    Write-Host ("{0,-20} {1}" -f $voiceRouteName, $gatewayList) -ForegroundColor Green
                 }
             } else {
-                Write-Host ("{0,-20} {1}" -f $name, $gatewayList)
+                Write-Host ("{0,-20} {1}" -f $voiceRouteName, $gatewayList) -ForegroundColor Red
             }
         } | Format-Table -AutoSize
 
+        write-host "`n"
         write-host "############ PSTN USAGE ############" 
+        write-host "`n"
         $pstnUsage = Get-CsOnlinePstnUsage
 
         write-host $pstnUsage
 
         write-host "############ DNS RESOLUTION ############"
 
-        Resolve-DNSName -Name $script:teamsTrunkID".msteams01.aspiresip.com"
+        Resolve-DNSName -Name $trunkFullID01
 
-        $msteams01Result = Resolve-DNSName -Name $script:teamsTrunkID".msteams01.aspiresip.com" | Select-Object -ExpandProperty IPAddress
+        $msteams01Result = Resolve-DNSName -Name $trunkFullID01 | Select-Object -ExpandProperty IPAddress
 
             if ($msteams01Result -contains "5.22.143.215") {
 
@@ -276,15 +280,15 @@ function diagTenantConfirm {
 
              }
 
-            Resolve-DNSName -Name $script:teamsTrunkID".msteams01.aspiresip.com"
+            Resolve-DNSName -Name  $trunkFullID02
 
-            $msteams02Result = Resolve-DNSName -Name $script:teamsTrunkID".msteams02.aspiresip.com" | Select-Object -ExpandProperty IPAddress
+            $msteams02Result = Resolve-DNSName -Name $trunkFullID02 | Select-Object -ExpandProperty IPAddress
 
             if ($msteams02Result -contains "148.253.173.215") {
 
-                write-host ""
+                write-host "`n"
                 write-host "DNS for Secondary Trunk looks good!" -ForegroundColor Green
-                write-host ""
+                write-host "`n"
 
             } else {
 
