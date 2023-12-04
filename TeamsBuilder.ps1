@@ -7,15 +7,26 @@
 ###########################################
 
 Clear-Host
-write-host "
-####################################
-####################################
-### LAZY MANS TEAMS CONFIGURATOR ###
-####################################
-######### Alex Thompson ############
-############# 2023 #################
-####################################
+$text = "
+
+    _              _          _       _____                          _____           _ 
+   / \   ___ _ __ (_)_ __ ___( )___  |_   _|__  __ _ _ __ ___  ___  |_   _|__   ___ | |
+  / _ \ / __| '_ \| | '__/ _ \// __|   | |/ _ \/ _  |  _' '_ \/ __|   | |/ _ \ / _ \| |
+ / ___ \\__ \ |_) | | | |  __/ \__ \   | |  __/ (_| | | | | | \__ \   | | (_) | (_) | |
+/_/   \_\___/ .__/|_|_|  \___| |___/   |_|\___|\__,_|_| |_| |_|___/   |_|\___/ \___/|_|
+            |_|                                                                        
 "
+
+
+for ($i=0; $i -lt $text.length; $i++) {
+    switch ($i % 6) {
+        0 { $c = "white" }
+        2 { $c = "green" }
+        4 { $c = "blue" }
+        default { $c = "cyan" }
+    }
+write-host $text[$i] -NoNewline -ForegroundColor $c
+}
 
 write-host "This script assumes the following:"
 write-host "you already have configured DNS for the customers trunk endpoint"
@@ -41,7 +52,6 @@ $teamsTrunkID = 0
 
 
 
-
 ############ Functions Collections ##############
 
 
@@ -51,6 +61,9 @@ function collectTeamsTrunkID {
         # Collect Teams Trunk ID from input
         $script:teamsTrunkID = Read-Host "Please enter Trunk ID in the following format 500XXX where XXX is the customer's Trunk ID"
         $lengthConfirmed = checkTrunkIDLength
+
+        $trunkFullID01 = "$script:teamsTrunkID.msteams01.aspiresip.com"
+        $trunkFullID02 = "$script:teamsTrunkID.msteams02.aspiresip.com"
 
         if (-not $lengthConfirmed) {
             Write-Host "Invalid Trunk ID. Let's try again."
@@ -219,9 +232,26 @@ function diagTenantConfirm {
 
     if ($script:lengthConfirmed = $true) {
         write-host "########## VOICE ROUTES ############"
-        $voiceRoutes = Get-CsOnlineVoiceRoute | select-object Name,OnlinePstnGatewayList
 
-        Write-Host $voiceRoutes
+        $voiceRoutes = Get-CsOnlineVoiceRoute | Select-Object Name, OnlinePstnGatewayList
+        
+        # Display the header with colors
+        Write-Host ("{0,-20} {1}" -f "Name", "OnlinePstnGatewayList") -ForegroundColor Red
+        
+        # Display each row with colors and check conditions
+        $voiceRoutes | ForEach-Object {
+            $voiceRouteName = $_.Name
+            $gatewayList = $_.OnlinePstnGatewayList
+        
+            # Check if specific routes exist and their contents end with "*.msteams01.aspiresip.com"
+            if ($voiceRouteName -eq "UK-SUBINTERNATIONAL" -or $voiceRouteName -eq "UK-SUB-NATIONAL" -or $voiceRouteName -eq "UK Emergency") {
+                if ($gatewayList -contains $trunkFullID01 -or $gatewayList -contains $trunkFullID02) {
+                    Write-Host ("{0,-20} {1}" -f $name, $gatewayList) -ForegroundColor Green
+                }
+            } else {
+                Write-Host ("{0,-20} {1}" -f $name, $gatewayList)
+            }
+        } | Format-Table -AutoSize
 
         write-host "############ PSTN USAGE ############" 
         $pstnUsage = Get-CsOnlinePstnUsage
