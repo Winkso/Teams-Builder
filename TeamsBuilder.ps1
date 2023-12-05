@@ -62,8 +62,8 @@ function collectTeamsTrunkID {
         $script:teamsTrunkID = Read-Host "Please enter Trunk ID in the following format 500XXX where XXX is the customer's Trunk ID"
         $lengthConfirmed = checkTrunkIDLength
 
-        $trunkFullID01 = "$script:teamsTrunkID.msteams01.aspiresip.com"
-        $trunkFullID02 = "$script:teamsTrunkID.msteams02.aspiresip.com"
+        $script:trunkFullID01 = "$script:teamsTrunkID.msteams01.aspiresip.com"
+        $script:trunkFullID02 = "$script:teamsTrunkID.msteams02.aspiresip.com"
 
         if (-not $lengthConfirmed) {
             Write-Host "Invalid Trunk ID. Let's try again."
@@ -258,7 +258,17 @@ function diagTenantConfirm {
         write-host "`n"
         write-host "############ PSTN USAGE ############" 
         write-host "`n"
-        $pstnUsage = Get-CsOnlinePstnUsage
+        $pstnUsage = Get-CsOnlinePstnUsage -Identity Global
+
+        if ($pstnUsage -contains "UK National" -and $pstnUsage -contains "International") {
+
+            Write-Host "PSTN Usage Looks good!"
+
+        } else{
+
+            Write-host "PSTN Usage isn't configured correctly."
+
+        }
 
         write-host $pstnUsage
 
