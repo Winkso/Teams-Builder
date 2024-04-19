@@ -144,7 +144,7 @@ function ShowSubMenu1 {
     Write-Host "2. Export a list of all users with Enterprise Voice Enabled."
     Write-Host "3. Export a list of all call queues."
     Write-Host "4. Export a list of all Auto Attendants."
-    Write-host "5. "
+    Write-host "5. Export a list of all DDIs and their Assignments"
     Write-host "6. "
 
     $option = Read-Host "Select a diagnostics option(1-6)"
@@ -161,6 +161,7 @@ function ShowSubMenu1 {
         2 { diagListEVTrue }
         3 { diagExportCallQueues }
         4 { diagExportAAs }
+        5 { findDdis }
     }
 
     #return $option
@@ -336,6 +337,33 @@ function diagExportAAs {
 
 
 
+}
+
+function findDdis {
+
+    $applicationInstanceDDIs = @( Get-CsOnlineApplicationInstance )
+    $userDDIs = @( Get-CsOnlineUser )
+
+    Write-host ""
+    Write-host "###############"
+    Write-host "###USER DDIS###"
+    Write-host "###############"
+    $userDDIs | Format-Table -Property @{label="Name"; Expression={$_.DisplayName}; Alignment="Left"; Width=50}, `
+                                    @{label="UserPrincipalName"; Expression={$_.UserPrincipalName}; Alignment="Left"; Width=70}, `
+                                    @{label="Phone Number"; Expression={$_.LineURI}; Alignment="left"; Width=20}, `
+                                    @{label="Enabled For Voice?"; Expression={$_.EnterpriseVoiceEnabled}; Alignment="Center"; Width=25}
+
+    Write-host ""
+    Write-host "################"
+    Write-host "## QUEUE DDIS ##"
+    Write-host "################"
+
+    $applicationInstanceDDIs | Format-Table -Property @{label="Name"; Expression={$_.DisplayName}; Alignment="Left"; Width=50}, `
+                                                                    @{label="UserPrincipalName"; Expression={$_.UserPrincipalName}; Alignment="Left"; Width=70}, `
+                                                                    @{label="Phone Number"; Expression={$_.PhoneNumber}; Alignment="left"; Width=20}, `
+                                                                    @{label="Object ID"; Expression={$_.ObjectID}; Alignment="Center";}
+
+    
 }
 
 
