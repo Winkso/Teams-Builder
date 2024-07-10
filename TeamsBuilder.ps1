@@ -112,7 +112,7 @@ function ShowMainMenu {
     Clear-Host
     Write-Host "---------- Main Menu ----------"
     Write-Output "1. Perform Diagnostics on the Tenant."
-    Write-Output "2. Perform Configuration changes on the Tenant."
+    Write-Output "2. Setup Tenant for Direct Routing."
     Write-Output "3. subMenu3"
     Write-Output "4. subMenu4"
     Write-Output "5. subMenu5"
@@ -132,6 +132,7 @@ function ShowMainMenu {
         2 { ShowSubMenu2 }
         3 { ShowSubMenu3 }
         4 { ShowSubMenu4 }
+        5 { ShowSubMenu5 }
     }
 
     #return $choice
@@ -170,7 +171,7 @@ function ShowSubMenu1 {
 function ShowSubMenu2 {
     Clear-Host
     Write-Host "---------- Sub Menu 2 - Configuration ----------"
-    Write-Host "1. Configure a Teams Tenant for Direct Routing."
+    Write-Host "1. Run Initial Configuration Commands."
     Write-Host "2. Configure a list of users for Direct Routing."
     Write-Host "3. Create new Call Queue(s)."
     Write-Host "4. Create an Auto Attendant."
@@ -187,7 +188,7 @@ function ShowSubMenu2 {
 
     # Perform the corresponding action based on the user's option
     switch ($option) {
-        1 { configNewTenant }
+        1 { configDirectRouting }
         2 { configNewUsers }
         3 { configNewCallQueue }
         4 { configNewAA }
@@ -225,6 +226,78 @@ function ShowSubMenu3 {
 
     return $option
 }
+
+function ShowSubMenu4 {
+    Clear-Host
+    Write-Host "---------- Sub Menu 3 - Testing ----------"
+    Write-Host "1. TESTING"
+    Write-Host "2. TESTING"
+    Write-Host "3. TESTING"
+    Write-Host "4. TESTING"
+    Write-host "5. TESTING"
+    Write-host "6. TESTING"
+
+    $option = Read-Host "Select a configuration option(1-6)"
+
+    # Validate the user's input
+    if ($option -lt 1 -or $option -gt 6) {
+        Write-Output "Invalid configuration option. Please select a number between 1 and 6."
+        return
+    }
+
+    # Perform the corresponding action based on the user's option
+    switch ($option) {
+        1 { Option1Action }
+        2 { Option2Action }
+    }
+
+    return $option
+}
+
+function ShowSubMenu5 {
+    Clear-Host
+    Write-Host "---------- Sub Menu 3 - Testing ----------"
+    Write-Host "1. TESTIGN"
+    Write-Host "2. TESTING"
+    Write-Host "3. TESTING"
+    Write-Host "4. TESTING"
+    Write-host "5. TESTING"
+    Write-host "6. TESTING"
+
+    $option = Read-Host "Select a configuration option(1-6)"
+
+    # Validate the user's input
+    if ($option -lt 1 -or $option -gt 6) {
+        Write-Output "Invalid configuration option. Please select a number between 1 and 6."
+        return
+    }
+
+    # Perform the corresponding action based on the user's option
+    switch ($option) {
+        1 { Option1Action }
+        2 { Option2Action }
+    }
+
+    return $option
+}
+
+function configDirectRouting {
+    #Call function to collect TrunkID from user
+    collectTeamsTrunkID
+
+    #Populate setup commands based on returned trunk ID. 
+    Set-CsOnlinePstnUsage -Identity Global -Usage @{Add="UK National"}
+    Set-CsOnlinePstnUsage -Identity Global -Usage @{Add="International"}
+    New-CsOnlineVoiceRoute -Identity UK-SUB-NATIONAL -Priority 3 -NumberPattern "^(\+44\d*)$" -OnlinePstnGatewayList $trunkFullID01, $trunkFullID02 -OnlinePstnUsages "UK National"
+    New-CsOnlineVoiceRoute -Identity UK-SUBINTERNATIONAL -Priority 1 -NumberPattern "^(\+\d*)$" -OnlinePstnGatewayList $trunkFullID01, $trunkFullID02 -OnlinePstnUsages "International"
+    New-CsOnlineVoiceRoute -Identity "UK Emergency" -Priority 0 -NumberPattern "^999$|^111$|^101$|^112$" -OnlinePstnGatewayList $trunkFullID01, $trunkFullID02 -OnlinePstnUsages "UK National"
+
+    New-CsOnlineVoiceRoutingPolicy "Aspire UNRESTRICTED" -OnlinePstnUsages "UK National", "International"
+    New-CsOnlineVoiceRoutingPolicy "Aspire RESTRICTED" -OnlinePstnUsages "UK National"
+
+
+}
+
 
 function diagTenantConfirm {
 
